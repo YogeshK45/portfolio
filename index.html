@@ -205,15 +205,17 @@
       background: rgba(56, 189, 248, 0.15);
     }
 
-    /* Fade-in on scroll */
+    /* Fade-in on scroll — only hidden when JS is running */
     .fade-in {
-      opacity: 0;
-      transform: translateY(30px);
       transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
+    .js-ready .fade-in {
+      opacity: 0;
+      transform: translateY(30px);
+    }
     .fade-in.visible {
-      opacity: 1;
-      transform: translateY(0);
+      opacity: 1 !important;
+      transform: translateY(0) !important;
     }
     .fade-in-delay-1 { transition-delay: 0.1s; }
     .fade-in-delay-2 { transition-delay: 0.2s; }
@@ -2166,6 +2168,9 @@
     })();
 
     /* ── Intersection Observer for fade-in ── */
+    // Mark body so CSS hides fade-in elements (only when JS is running)
+    document.body.classList.add('js-ready');
+
     const fadeEls = document.querySelectorAll('.fade-in');
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -2178,12 +2183,14 @@
 
     fadeEls.forEach(el => observer.observe(el));
 
-    /* Fallback: ensure all fade-in elements are visible after 300ms */
-    setTimeout(() => {
-      document.querySelectorAll('.fade-in:not(.visible)').forEach(el => {
-        el.classList.add('visible');
+    /* Immediate fallback — make everything visible after one frame */
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.querySelectorAll('.fade-in:not(.visible)').forEach(el => {
+          el.classList.add('visible');
+        });
       });
-    }, 300);
+    });
 
     /* ── Count-up animation ── */
     function animateCount(el) {
